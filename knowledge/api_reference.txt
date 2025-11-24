@@ -1,0 +1,13 @@
+API Reference for /api/v1/chat/sessions/{session_id}/messages:
+
+*   **Method:** POST
+*   **Description:** Creates a new message in a chat session and gets a response from the agent.
+*   **Path Parameters:**
+    *   `session_id` (integer, required): The ID of the chat session.
+*   **Request Body:**
+    *   `role` (string, required): The role of the message sender (e.g., "user").
+    *   `content` (string, required): The content of the message.
+*   **Responses:**
+    *   `200 OK`: Returns the agent's response message.
+    *   `404 Not Found`: If the session ID does not exist.
+    *   `422 Unprocessable Entity`: If the request body is invalid.

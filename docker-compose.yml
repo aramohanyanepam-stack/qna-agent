@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+  app:
+    build: app
+    ports:
+      - 8085:8085
+    env_file:
+      - env/app.env
+      - env/app.docker.env
+    networks:
+      - qna-agent-network
+  ollama-webui:
+    image: ghcr.io/ollama-webui/ollama-webui:main
+    volumes:
+      - ./data/ollama-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - 3002:8080
+    env_file:
+      - ./env/ollama-webui.env
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - qna-agent-network
+  ollama:
+    image: ollama/ollama:0.7.0
+    restart: always
+    env_file:
+      - ./env/ollama.env
+    ports:
+      - 11434:11434
+    volumes:
+      - ./data/ollama:/.ollama
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [gpu]
+    networks:
+      - qna-agent-network
+
+networks:
+  qna-agent-network:
+    driver: bridge
+    ipam:
+      driver: default

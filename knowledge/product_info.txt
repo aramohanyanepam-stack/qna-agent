@@ -1,0 +1,9 @@
+Product Name: QnA-Agent
+Version: 1.0
+Description: A smart question-answering agent that can retrieve information from a knowledge base.
+Features:
+- Natural language understanding
+- Tool usage for knowledge retrieval
+- Streaming responses
+- RESTful API
+- Docker support

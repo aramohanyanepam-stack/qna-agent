@@ -1,0 +1,8 @@
+Q: What is the QnA-Agent?
+A: The QnA-Agent is a smart question-answering agent that can retrieve information from a knowledge base.
+
+Q: How do I ask a question?
+A: You can send a POST request to the /api/v1/chat/sessions/{session_id}/messages/ endpoint with your question in the message body.
+
+Q: Can I use it with Docker?
+A: Yes, the QnA-Agent comes with a Dockerfile and a docker-compose.yml file for easy deployment.

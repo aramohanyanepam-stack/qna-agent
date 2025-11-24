@@ -1,0 +1,13 @@
+QnA-Agent Pricing Plans:
+
+1.  **Basic Plan:**
+    *   Price: $10/month
+    *   Features: Up to 1,000 API calls per month, basic knowledge base integration.
+
+2.  **Pro Plan:**
+    *   Price: $50/month
+    *   Features: Up to 10,000 API calls per month, advanced knowledge base integration, priority support.
+
+3.  **Enterprise Plan:**
+    *   Price: Custom
+    *   Features: Unlimited API calls, dedicated support, on-premise deployment options.
