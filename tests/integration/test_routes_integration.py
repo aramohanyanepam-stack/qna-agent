@@ -17,7 +17,7 @@ def setup_integration_test(override_get_db, monkeypatch):
     # monkeypatch.setattr("app.core.config.settings.LLM_MODEL", "phi3:mini")
     yield
 
-
+@pytest.mark.integration
 def test_create_chat_session(db_session):
     response = client.post("/api/v1/chat/sessions/")
     assert response.status_code == 200
@@ -30,7 +30,7 @@ def test_create_chat_session(db_session):
     assert session_in_db is not None
     assert session_in_db.id == data["id"]
 
-
+@pytest.mark.integration
 def test_read_chat_sessions(db_session):
     # Arrange: Create a few sessions directly in DB
     session1 = ChatSession()
@@ -47,7 +47,7 @@ def test_read_chat_sessions(db_session):
     assert any(s["id"] == session1.id for s in data)
     assert any(s["id"] == session2.id for s in data)
 
-
+@pytest.mark.integration
 def test_read_chat_session(db_session):
     # Arrange: Create a session
     session = ChatSession()
@@ -60,13 +60,13 @@ def test_read_chat_session(db_session):
     data = response.json()
     assert data["id"] == session.id
 
-
+@pytest.mark.integration
 def test_read_chat_session_not_found():
     response = client.get("/api/v1/chat/sessions/99999")
     assert response.status_code == 404
     assert response.json() == {"detail": "Chat session not found"}
 
-
+@pytest.mark.integration
 def test_delete_chat_session(db_session):
     # Arrange: Create a session
     session = ChatSession()
@@ -83,7 +83,7 @@ def test_delete_chat_session(db_session):
     session_in_db = db_session.query(ChatSession).filter_by(id=session.id).first()
     assert session_in_db is None
 
-
+@pytest.mark.integration
 def test_delete_chat_session_not_found():
     response = client.delete("/api/v1/chat/sessions/99999")
     assert response.status_code == 404
