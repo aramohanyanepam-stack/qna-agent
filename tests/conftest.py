@@ -1,13 +1,12 @@
 import pytest
-from testcontainers.postgres import PostgresContainer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.model.chat_models import Base
+from testcontainers.postgres import PostgresContainer
+
 from app.core.database import get_db
+from app.core.openai import get_openai_client
+from app.model.chat_models import Base
 from main import app
-from unittest.mock import MagicMock
-from app.service.chat_message_service import ChatMessageService
-from app.service.query_ai_service import QueryAIService
 
 
 @pytest.fixture(scope="session")
@@ -52,4 +51,11 @@ def override_get_db(db_session):
     app.dependency_overrides[get_db] = lambda: db_session
     yield
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function")
+def openai_client():
+    """
+    Fixture to get openai client.
+    """
+    return get_openai_client()
 

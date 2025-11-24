@@ -1,5 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
+
+from app.core.config import settings
 from main import app
 from app.model.chat_models import ChatSession, Message
 import json
@@ -149,7 +151,8 @@ def test_create_message_for_session_stream(db_session):
             data_str = line[len("data: "):]
             try:
                 chunk = json.loads(data_str)
-                full_response_content += chunk.get("delta", "")
+                if chunk.get("type") == "content":
+                    full_response_content += chunk.get("delta", "")
             except json.JSONDecodeError:
                 continue
 
@@ -163,3 +166,81 @@ def test_create_message_for_session_stream(db_session):
     assert messages_in_db[0].content == user_message_content
     assert messages_in_db[1].role == "assistant"
     assert messages_in_db[1].content == full_response_content
+
+
+@pytest.mark.integration
+def test_create_message_for_session_with_llm_validation(db_session, openai_client):
+    # Arrange: Create a session
+    session = ChatSession()
+    db_session.add(session)
+    db_session.commit()
+    db_session.refresh(session)
+
+    user_message_content = "What is the QnA-Agent and what are its main features?"
+    request_data = {"role": "user", "content": user_message_content}
+
+    # Act: Get the application's response
+    response = client.post(f"/api/v1/chat/sessions/{session.id}/messages/", json=request_data)
+    assert response.status_code == 200
+    response_data = response.json()
+    app_generated_answer = response_data["content"]
+
+    # Assert: Use a separate LLM call to validate the response
+    validation_prompt = f"""
+    The user asked: "{user_message_content}"
+    The application answered: "{app_generated_answer}"
+    
+    Based on the provided context about the QnA-Agent (a smart question-answering agent with features like tool use,
+     streaming, and Docker support), is the application's answer helpful and accurate? 
+    Respond with only "Yes" or "No".
+    """
+
+    validation_response = openai_client.chat.completions.create(
+        model=settings.LLM_MODEL,
+        messages=[{'role': 'user', 'content': validation_prompt}]
+    )
+    
+    assert "yes" in validation_response.choices[0].message.content.lower()
+
+
+@pytest.mark.integration
+def test_create_message_for_session_stream_with_llm_validation(db_session, openai_client):
+    # Arrange: Create a session
+    session = ChatSession()
+    db_session.add(session)
+    db_session.commit()
+    db_session.refresh(session)
+
+    user_message_content = "What are the main features of the QnA-Agent?"
+    request_data = {"role": "user", "content": user_message_content}
+
+    # Act
+    response = client.post(f"/api/v1/chat/sessions/{session.id}/messages/stream", json=request_data)
+    assert response.status_code == 200
+
+    full_response_content = ""
+    for line in response.iter_lines():
+        if line.startswith("data:"):
+            data_str = line[len("data: "):]
+            try:
+                chunk = json.loads(data_str)
+                if chunk.get("type") == "content":
+                    full_response_content += chunk.get("delta", "")
+            except json.JSONDecodeError:
+                continue
+
+    # Assert: Use a separate LLM call to validate the streamed response
+    validation_prompt = f"""
+    The user asked: "{user_message_content}"
+    The application's streamed answer was: "{full_response_content}"
+
+    Does the answer correctly list features like Natural Language Understanding, Tool Usage, and Streaming Responses?
+    Respond with only "Yes" or "No".
+    """
+
+    validation_response = openai_client.chat.completions.create(
+        model=settings.LLM_MODEL,
+        messages=[{'role': 'user', 'content': validation_prompt}]
+    )
+
+    assert "yes" in validation_response.choices[0].message.content.lower()
